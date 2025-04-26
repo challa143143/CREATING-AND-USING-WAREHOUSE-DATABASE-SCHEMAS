@@ -1,0 +1,62 @@
+CREATING AND USING WAREHOUSE, DATABASE,SCHEMAS
+*Role account admin virtual warehouse compute_wh
+
+SELECT * FROM SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CALL_CENTER;
+
+CREATE WAREHOUSE TRAINING_WH
+WITH
+  WAREHOUSE_SIZE = XSMALL
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE
+  INITIALLY_SUSPENDED = TRUE
+  STATEMENT_QUEUED_TIMEOUT_IN_SECONDS = 300
+  STATEMENT_TIMEOUT_IN_SECONDS = 600;
+
+
+  CREATE DATABASE SALES_YASHODARA_DB
+  DATA_RETENTION_TIME_IN_DAYS = 0
+  COMMENT = 'Ecommerce Sales info';
+
+  create schema Sales_Data;
+  create schema Sales_Views;
+  create schema Sales_Stage;
+
+  USE WAREHOUSE TRAINING_WH;
+  USE DATABASE SALES_YASHODARA_DB;
+  USE SCHEMA SALES_DATA;
+
+  SELECT CURRENT_DATABASE(), CURRENT_SCHEMA(), CURRENT_WAREHOUSE();
+
+  CREATE or replace table emp_basic (
+  first_name string,
+  last_name string,
+  email string,
+  streetadress string,
+  city string,
+  start_date date
+  );
+
+  list @SALES_YASHODARA_DB.SALES_DATA.%emp_basic;
+ 
+SELECT * from information_schema.table_storage_metrics where table_catalog ='DEMO_db';
+
+USE schema snowflake.account_usage;
+
+select query_type, sum(credits_used_cloud_services) cs_credits, count(1) num_queries
+from query_history
+where True
+and start_time >= timestampadd(day,-1,current_timestamp)
+group by 1
+order by 2 desc
+limit 10;
+
+select warehouse_name,
+  sum(credits_used_cloud_services) credits_used_cloud_services,
+  sum(credits_used_compute) credits_used_compute,
+  sum(credits_used)
+from warehouse_metering_history
+where true
+  and start_time >= timestampadd(day,-10,current_timestamp)
+group by 1
+order by 2 desc
+limit 10;
